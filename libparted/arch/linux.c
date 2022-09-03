@@ -650,6 +650,10 @@ _device_probe_type (PedDevice* dev)
         if (!_device_stat (dev, &dev_stat))
                 return 0;
 
+        // always treat device as a filee
+        dev->type = PED_DEVICE_FILE;
+        return 1;
+
         if (!S_ISBLK(dev_stat.st_mode)) {
                 dev->type = PED_DEVICE_FILE;
                 return 1;
@@ -1213,8 +1217,10 @@ init_file (PedDevice* dev)
 
         if (!_device_stat (dev, &dev_stat))
                 goto error;
-        if (!_device_open_ro (dev))
+        if (!_device_open_ro (dev)) {
+                printf("going to error from _device_open_ro\n");
                 goto error;
+        }
 
         dev->sector_size = PED_SECTOR_SIZE_DEFAULT;
         char *p = getenv ("PARTED_SECTOR_SIZE");
@@ -1466,136 +1472,142 @@ linux_new (const char* path)
         dm_udev_set_sync_support(1);
 #endif
 
-        if (!_device_probe_type (dev))
-                goto error_free_arch_specific;
-
-        switch (dev->type) {
-        case PED_DEVICE_IDE:
-                if (!init_ide (dev))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_SCSI:
-                if (!init_scsi (dev))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_DAC960:
-                if (!init_generic (dev, _("DAC960 RAID controller")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_SX8:
-                if (!init_generic (dev, _("Promise SX8 SATA Device")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_AOE:
-                if (!init_generic (dev, _("ATA over Ethernet Device")))
-                    goto error_free_arch_specific;
-                break;
-
-#if defined __s390__ || defined __s390x__
-        case PED_DEVICE_DASD:
-                if (!init_dasd (dev, _("IBM S390 DASD drive")))
-                        goto error_free_arch_specific;
-                break;
-#endif
-
-        case PED_DEVICE_VIODASD:
-                if (!init_generic (dev, _("IBM iSeries Virtual DASD")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_CPQARRAY:
-                if (!init_generic (dev, _("Compaq Smart Array")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_NVME:
-                if (!init_nvme (dev))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_PMEM:
-                if (!init_generic (dev, _("NVDIMM Device")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_ATARAID:
-                if (!init_generic (dev, _("ATARAID Controller")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_I2O:
-                if (!init_generic (dev, _("I2O Controller")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_UBD:
-                if (!init_generic (dev, _("User-Mode Linux UBD")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_FILE:
-                if (!init_file (dev))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_LOOP:
-                if (!init_generic (dev, _("Loopback device")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_DM:
-                {
-                  char* type;
-                  if (arch_specific->dmtype == NULL
-                      || asprintf(&type, _("Linux device-mapper (%s)"),
-                                  arch_specific->dmtype) == -1)
-                        goto error_free_arch_specific;
-                  bool ok = init_generic (dev, type);
-                  free (type);
-                  if (!ok)
-                    goto error_free_arch_specific;
-                  break;
-                }
-
-        case PED_DEVICE_XVD:
-                if (!init_generic (dev, _("Xen Virtual Block Device")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_UNKNOWN:
-                if (!init_generic (dev, _("Unknown")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_SDMMC:
-                if (!init_sdmmc (dev))
-                        goto error_free_arch_specific;
-                break;
-        case PED_DEVICE_VIRTBLK:
-                if (!init_generic(dev, _("Virtio Block Device")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_MD:
-                if (!init_generic(dev, _("Linux Software RAID Array")))
-                        goto error_free_arch_specific;
-                break;
-
-        case PED_DEVICE_RAM:
-                if (!init_generic (dev, _("RAM Drive")))
-                        goto error_free_arch_specific;
-                break;
-
-        default:
-                ped_exception_throw (PED_EXCEPTION_NO_FEATURE,
-                                PED_EXCEPTION_CANCEL,
-                                _("ped_device_new()  Unsupported device type"));
+        if (!_device_probe_type (dev)) {
                 goto error_free_arch_specific;
         }
+
+        // always a file
+        if (!init_file (dev)) {
+                goto error_free_arch_specific;
+        }
+
+//         switch (dev->type) {
+//         case PED_DEVICE_IDE:
+//                 if (!init_ide (dev))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_SCSI:
+//                 if (!init_scsi (dev))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_DAC960:
+//                 if (!init_generic (dev, _("DAC960 RAID controller")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_SX8:
+//                 if (!init_generic (dev, _("Promise SX8 SATA Device")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_AOE:
+//                 if (!init_generic (dev, _("ATA over Ethernet Device")))
+//                     goto error_free_arch_specific;
+//                 break;
+
+// #if defined __s390__ || defined __s390x__
+//         case PED_DEVICE_DASD:
+//                 if (!init_dasd (dev, _("IBM S390 DASD drive")))
+//                         goto error_free_arch_specific;
+//                 break;
+// #endif
+
+//         case PED_DEVICE_VIODASD:
+//                 if (!init_generic (dev, _("IBM iSeries Virtual DASD")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_CPQARRAY:
+//                 if (!init_generic (dev, _("Compaq Smart Array")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_NVME:
+//                 if (!init_nvme (dev))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_PMEM:
+//                 if (!init_generic (dev, _("NVDIMM Device")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_ATARAID:
+//                 if (!init_generic (dev, _("ATARAID Controller")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_I2O:
+//                 if (!init_generic (dev, _("I2O Controller")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_UBD:
+//                 if (!init_generic (dev, _("User-Mode Linux UBD")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_FILE:
+//                 if (!init_file (dev))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_LOOP:
+//                 if (!init_generic (dev, _("Loopback device")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_DM:
+//                 {
+//                   char* type;
+//                   if (arch_specific->dmtype == NULL
+//                       || asprintf(&type, _("Linux device-mapper (%s)"),
+//                                   arch_specific->dmtype) == -1)
+//                         goto error_free_arch_specific;
+//                   bool ok = init_generic (dev, type);
+//                   free (type);
+//                   if (!ok)
+//                     goto error_free_arch_specific;
+//                   break;
+//                 }
+
+//         case PED_DEVICE_XVD:
+//                 if (!init_generic (dev, _("Xen Virtual Block Device")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_UNKNOWN:
+//                 if (!init_generic (dev, _("Unknown")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_SDMMC:
+//                 if (!init_sdmmc (dev))
+//                         goto error_free_arch_specific;
+//                 break;
+//         case PED_DEVICE_VIRTBLK:
+//                 if (!init_generic(dev, _("Virtio Block Device")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_MD:
+//                 if (!init_generic(dev, _("Linux Software RAID Array")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         case PED_DEVICE_RAM:
+//                 if (!init_generic (dev, _("RAM Drive")))
+//                         goto error_free_arch_specific;
+//                 break;
+
+//         default:
+//                 ped_exception_throw (PED_EXCEPTION_NO_FEATURE,
+//                                 PED_EXCEPTION_CANCEL,
+//                                 _("ped_device_new()  Unsupported device type"));
+//                 goto error_free_arch_specific;
+//         }
         return dev;
 
 error_free_arch_specific:
@@ -1660,6 +1672,8 @@ linux_is_busy (PedDevice* dev)
 static void
 _flush_cache (PedDevice* dev)
 {
+        // linux specific, so we can't do this.
+        return;
         LinuxSpecific*  arch_specific = LINUX_SPECIFIC (dev);
         int             i;
         int             lpn = _device_get_partition_range(dev);
@@ -1701,6 +1715,7 @@ static int
 _device_open_ro (PedDevice* dev)
 {
     int rc = _device_open (dev, RD_MODE);
+
     if (rc)
         dev->open_count++;
     return rc;

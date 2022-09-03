@@ -31,6 +31,9 @@
 #include "table.h"
 #include "version.h"
 
+#ifndef UUID_STR_LEN
+#define UUID_STR_LEN 37
+#endif
 #define AUTHORS \
   "<http://git.debian.org/?p=parted/parted.git;a=blob_plain;f=AUTHORS>"
 
@@ -2553,18 +2556,23 @@ if (*argc_ptr) {
         (*argc_ptr)--;
         (*argv_ptr)++;
 } else {
-retry:
-        ped_device_probe_all ();
-        dev = ped_device_get_next (NULL);
-        if (!dev) {
-                if (ped_exception_throw (PED_EXCEPTION_ERROR,
+ped_exception_throw (PED_EXCEPTION_ERROR,
                         PED_EXCEPTION_RETRY_CANCEL,
-                        _("No device found"))
-                                == PED_EXCEPTION_RETRY)
-                        goto retry;
-                else
+                        _("Must supply file as argument")
+                                == PED_EXCEPTION_RETRY);
                         return NULL;
-        }
+// retry:
+//         ped_device_probe_all ();
+//         dev = ped_device_get_next (NULL);
+//         if (!dev) {
+//                 if (ped_exception_throw (PED_EXCEPTION_ERROR,
+//                         PED_EXCEPTION_RETRY_CANCEL,
+//                         _("No device found"))
+//                                 == PED_EXCEPTION_RETRY)
+//                         goto retry;
+//                 else
+//                         return NULL;
+//         }
 }
 
 if (!ped_device_open (dev))

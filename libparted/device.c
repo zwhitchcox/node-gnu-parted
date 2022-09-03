@@ -148,9 +148,9 @@ ped_device_free_all ()
 PedDevice*
 ped_device_get (const char* path)
 {
-	PedDevice*	walk;
 	char*		normal_path = NULL;
 
+	PedDevice*	walk;
 	PED_ASSERT (path != NULL);
 	/* Don't canonicalize /dev/mapper or /dev/md/ paths, see
 	   tests/symlink.c
@@ -171,7 +171,6 @@ ped_device_get (const char* path)
 			return walk;
 		}
 	}
-
 	walk = ped_architecture->dev_ops->_new (normal_path);
 	free (normal_path);
 	if (!walk)
