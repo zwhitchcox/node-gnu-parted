@@ -58,6 +58,8 @@
 #  define _(String) (String)
 #endif /* ENABLE_NLS */
 
+#undef lseek
+
 /* The __attribute__ feature is available in gcc versions 2.5 and later.
    The __-protected variants of the attributes 'format' and 'printf' are
    accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
@@ -826,7 +828,7 @@ _kernel_has_blkgetsize64(void)
             version >= KERNEL_VERSION (2,4,18)) return 1;
         return 0;
 }
-
+unsigned long long global_disk_size;
 /* TODO: do a binary search if BLKGETSIZE doesn't work?! */
 static PedSector
 _device_get_length (PedDevice* dev)
@@ -840,6 +842,8 @@ _device_get_length (PedDevice* dev)
 
         PED_ASSERT (dev->open_count > 0);
         PED_ASSERT (dev->sector_size % PED_SECTOR_SIZE_DEFAULT == 0);
+
+        return global_disk_size;
 
         test_str = getenv ("PARTED_TEST_DEVICE_LENGTH");
         if (test_str

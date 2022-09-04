@@ -2654,6 +2654,7 @@ _done_commands ();
 _done_messages ();
 done_ui();
 }
+extern unsigned long long global_disk_size;
 
 int
 main (int argc, char** argv)
@@ -2662,10 +2663,27 @@ main (int argc, char** argv)
 	PedDisk*        diskp = 0;
         int             status;
 
+        if (!strcmp(argv[1], "")) {
+                fprintf(stderr, "must provide a disk\n");
+                return 1;
+        }
+        global_disk_size = atoi(argv[2]); // size in sectors
+        if (global_disk_size == 0) {
+                fprintf(stderr, "must provide size of disk (in sectors). Try `sudo partx -g -o SECTORS %s`  if you're on linux, `sudo diskutil list %s` on mac.\n", argv[1], argv[1]);
+                return 1;
+        }
+
         set_program_name (argv[0]);
         atexit (close_stdout);
 
         dev = _init (&argc, &argv);
+        // remove size argument
+        argv++;
+        argc--;
+        for (int i = 0; i < argc; i++) {
+                printf("%d: %s\n", i, argv[i]);
+        }
+
         if (!dev)
                 return 1;
 
