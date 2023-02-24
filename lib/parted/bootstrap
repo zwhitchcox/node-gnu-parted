@@ -247,7 +247,11 @@ COPYRIGHT_HOLDER='Free Software Foundation, Inc.'
 MSGID_BUGS_ADDRESS=bug-$package@gnu.org
 
 # Files we don't want to import.
-excluded_files=
+excluded_files='
+    m4/dup2.m4
+    m4/sleep.m4
+    m4/nanosleep.m4
+'
 
 # File that should exist in the top directory of a checked out hierarchy,
 # but not in a distribution tarball.
