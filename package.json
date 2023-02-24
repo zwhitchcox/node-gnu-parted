@@ -1,0 +1,26 @@
+{
+  "name": "gnu-parted",
+  "version": "0.0.0",
+  "description": "",
+  "main": "build/api.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zwhitchcox/node-gnu-parted.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zwhitchcox/node-gnu-parted/issues"
+  },
+  "homepage": "https://github.com/zwhitchcox/ndoe-gnu-parted#readme",
+  "dependencies": {
+    "typescript": "^4.9.5"
+  }
+}
